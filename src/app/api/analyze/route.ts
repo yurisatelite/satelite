@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { YoutubeTranscript } from "youtube-transcript";
-import { anthropic } from "@/lib/anthropic";
+import { getAnthropic } from "@/lib/anthropic";
 
 const SYSTEM_PROMPT =
   "Você é um estrategista sênior de conteúdo digital. Analise o vídeo fornecido e retorne APENAS um JSON válido, sem texto adicional, sem markdown, sem explicações. O JSON deve ter exatamente esta estrutura: { analysis: { hook_type, structure, why_it_worked, strongest_point, weakest_point }, script: { hook, development, closing, filming_tips: { light, framing, presence } } }";
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
 
     const sourceText = await resolveInputText(input);
 
-    const completion = await anthropic.messages.create({
+    const completion = await getAnthropic().messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 1200,
       system: SYSTEM_PROMPT,
