@@ -3,7 +3,7 @@ import { YoutubeTranscript } from "youtube-transcript";
 import { getAnthropic } from "@/lib/anthropic";
 
 const SYSTEM_PROMPT =
-  "Você é um estrategista sênior de conteúdo digital. Analise o vídeo fornecido e retorne APENAS um JSON válido, sem texto adicional, sem markdown, sem explicações. O JSON deve ter exatamente esta estrutura: { analysis: { hook_type, structure, why_it_worked, strongest_point, weakest_point }, script: { hook, development, closing, filming_tips: { light, framing, presence } } }";
+  "Você é um estrategista sênior de conteúdo digital brasileiro. Analise o vídeo fornecido e retorne APENAS um JSON válido, sem texto adicional, sem markdown, sem explicações. IMPORTANTE: todos os valores do JSON devem ser escritos em português brasileiro. O JSON deve ter exatamente esta estrutura: { analysis: { hook_type: tipo do gancho em português, structure: estrutura narrativa em português, why_it_worked: por que funcionou em português, strongest_point: ponto mais forte em português, weakest_point: ponto mais fraco em português }, script: { hook: gancho adaptado ao nicho e estilo do usuário em português, development: desenvolvimento em português, closing: fechamento em português, filming_tips: { light: dica de luz em português, framing: enquadramento em português, presence: presença em português } } }";
 
 type AnalyzeBody = {
   input?: string;
