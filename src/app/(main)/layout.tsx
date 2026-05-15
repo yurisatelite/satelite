@@ -1,6 +1,9 @@
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { Sidebar } from "@/components/Sidebar";
 
+// Prevent static prerendering — this layout reads cookies at runtime
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({
   children,
 }: {

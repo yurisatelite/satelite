@@ -1,11 +1,18 @@
-import { createBrowserClient, createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+// Lazy singleton — only instantiated on first call, never during module load or prerender
+let _browserClient: ReturnType<typeof createSupabaseClient> | null = null;
+
 export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  if (!_browserClient) {
+    _browserClient = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+  }
+  return _browserClient;
 }
 
 export async function createServerSupabaseClient() {
@@ -25,7 +32,7 @@ export async function createServerSupabaseClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // Called from a Server Component — session refresh via middleware handles this.
+            // Server Component — session refresh via middleware handles this.
           }
         },
       },
