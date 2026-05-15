@@ -85,7 +85,9 @@ function ResultCard({
       >
         {title}
       </h2>
-      <dl style={{ display: "flex", flexDirection: "column", gap: "16px", margin: 0 }}>
+      <dl
+        style={{ display: "flex", flexDirection: "column", gap: "16px", margin: 0 }}
+      >
         {fields.map(({ label, value }) => (
           <div key={label}>
             <dt
@@ -142,7 +144,8 @@ export default function HomePage() {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data?.error ?? "Falha ao analisar conteúdo.");
+      if (!response.ok)
+        throw new Error(data?.error ?? "Falha ao analisar conteúdo.");
       setResult(data);
     } catch (err) {
       setError(
@@ -155,7 +158,6 @@ export default function HomePage() {
 
   return (
     <div style={{ padding: "48px", maxWidth: "900px" }}>
-      {/* Header */}
       <h1
         style={{
           fontFamily: "var(--font-cinzel)",
@@ -213,7 +215,6 @@ export default function HomePage() {
         onSubmit={handleSubmit}
         style={{ display: "flex", flexDirection: "column", gap: "20px" }}
       >
-        {/* Textarea */}
         <div>
           <label
             style={{
@@ -245,13 +246,8 @@ export default function HomePage() {
           />
         </div>
 
-        {/* Nicho + Estilo */}
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "16px",
-          }}
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}
         >
           {(
             [
@@ -295,7 +291,6 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Submit */}
         <div>
           <button
             type="submit"
@@ -335,7 +330,6 @@ export default function HomePage() {
         )}
       </form>
 
-      {/* Results */}
       {result && (
         <div
           style={{
@@ -350,9 +344,18 @@ export default function HomePage() {
             fields={[
               { label: "Tipo de gancho", value: result.analysis.hook_type },
               { label: "Estrutura", value: result.analysis.structure },
-              { label: "Por que funcionou", value: result.analysis.why_it_worked },
-              { label: "Ponto mais forte", value: result.analysis.strongest_point },
-              { label: "Ponto mais fraco", value: result.analysis.weakest_point },
+              {
+                label: "Por que funcionou",
+                value: result.analysis.why_it_worked,
+              },
+              {
+                label: "Ponto mais forte",
+                value: result.analysis.strongest_point,
+              },
+              {
+                label: "Ponto mais fraco",
+                value: result.analysis.weakest_point,
+              },
             ]}
           />
           <ResultCard
@@ -362,7 +365,10 @@ export default function HomePage() {
               { label: "Desenvolvimento", value: result.script.development },
               { label: "Fechamento", value: result.script.closing },
               { label: "Luz", value: result.script.filming_tips.light },
-              { label: "Enquadramento", value: result.script.filming_tips.framing },
+              {
+                label: "Enquadramento",
+                value: result.script.filming_tips.framing,
+              },
               { label: "Presença", value: result.script.filming_tips.presence },
             ]}
           />
