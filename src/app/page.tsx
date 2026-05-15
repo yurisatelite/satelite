@@ -2,6 +2,8 @@
 
 import { FormEvent, useState } from "react";
 
+type Platform = "instagram" | "tiktok" | "youtube";
+
 type AnalysisResponse = {
   analysis: {
     hook_type: string;
@@ -22,20 +24,112 @@ type AnalysisResponse = {
   };
 };
 
-const initialInput = {
-  input: "",
-  niche: "",
-  style: "",
-};
+const C = {
+  bgPrimary: "#0A0A0A",
+  bgSecondary: "#111116",
+  card: "#2A2A2A",
+  blue: "#004AAD",
+  gold: "#F5C16C",
+  lavender: "#CBC6E6",
+  text: "#FAFAFA",
+  muted: "#8A8A9A",
+} as const;
+
+const platforms: { id: Platform; label: string }[] = [
+  { id: "instagram", label: "Instagram" },
+  { id: "tiktok", label: "TikTok" },
+  { id: "youtube", label: "YouTube" },
+];
+
+function inputStyle(focused: boolean) {
+  return {
+    width: "100%",
+    background: C.bgSecondary,
+    border: `1px solid ${focused ? C.blue : C.card}`,
+    borderRadius: "10px",
+    padding: "12px 16px",
+    color: C.text,
+    fontFamily: "var(--font-inter)",
+    fontSize: "14px",
+    outline: "none",
+    transition: "border-color 0.2s ease",
+  };
+}
+
+function ResultCard({
+  title,
+  fields,
+}: {
+  title: string;
+  fields: { label: string; value: string }[];
+}) {
+  return (
+    <div
+      style={{
+        background: C.bgSecondary,
+        border: `1px solid ${C.card}`,
+        borderRadius: "12px",
+        padding: "24px",
+      }}
+    >
+      <h2
+        style={{
+          fontFamily: "var(--font-cinzel)",
+          fontSize: "15px",
+          fontWeight: 600,
+          color: C.gold,
+          marginBottom: "20px",
+          marginTop: 0,
+          letterSpacing: "0.06em",
+        }}
+      >
+        {title}
+      </h2>
+      <dl style={{ display: "flex", flexDirection: "column", gap: "16px", margin: 0 }}>
+        {fields.map(({ label, value }) => (
+          <div key={label}>
+            <dt
+              style={{
+                fontFamily: "var(--font-inter)",
+                fontSize: "10px",
+                fontWeight: 700,
+                color: C.gold,
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                marginBottom: "5px",
+              }}
+            >
+              {label}
+            </dt>
+            <dd
+              style={{
+                fontFamily: "var(--font-inter)",
+                fontSize: "13px",
+                color: C.text,
+                lineHeight: "1.6",
+                margin: 0,
+              }}
+            >
+              {value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
 
 export default function HomePage() {
-  const [form, setForm] = useState(initialInput);
+  const [platform, setPlatform] = useState<Platform>("instagram");
+  const [form, setForm] = useState({ input: "", niche: "", style: "" });
+  const [focusedField, setFocusedField] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<AnalysisResponse | null>(null);
+  const [btnHover, setBtnHover] = useState(false);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setLoading(true);
     setError("");
     setResult(null);
@@ -44,167 +138,236 @@ export default function HomePage() {
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, platform }),
       });
 
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data?.error ?? "Falha ao analisar conteúdo.");
-      }
-
+      if (!response.ok) throw new Error(data?.error ?? "Falha ao analisar conteúdo.");
       setResult(data);
-    } catch (submitError) {
-      const message =
-        submitError instanceof Error
-          ? submitError.message
-          : "Erro inesperado durante a análise.";
-      setError(message);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Erro inesperado durante a análise."
+      );
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-14">
-      <section className="mb-10 rounded-2xl border border-slate-800/70 bg-slate-950/70 p-8 shadow-[0_0_60px_rgba(56,189,248,0.08)] backdrop-blur">
-        <p className="mb-3 inline-flex rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs tracking-[0.2em] text-cyan-300 uppercase">
-          Satélite
-        </p>
-        <h1 className="text-3xl font-semibold text-slate-100 md:text-5xl">
-          Decode vídeos, amplifique ideias.
-        </h1>
-        <p className="mt-5 max-w-3xl text-sm leading-relaxed text-slate-300 md:text-base">
-          O Satélite transforma vídeos e transcrições em inteligência prática:
-          análise estratégica do que funcionou, pontos fracos e roteiro pronto
-          para sua próxima publicação no seu nicho e no seu estilo.
-        </p>
-      </section>
+    <div style={{ padding: "48px", maxWidth: "900px" }}>
+      {/* Header */}
+      <h1
+        style={{
+          fontFamily: "var(--font-cinzel)",
+          fontSize: "clamp(26px, 3.5vw, 40px)",
+          fontWeight: 700,
+          color: C.text,
+          margin: "0 0 8px",
+          letterSpacing: "0.06em",
+        }}
+      >
+        Analisar Vídeo
+      </h1>
+      <p
+        style={{
+          fontFamily: "var(--font-playfair)",
+          fontStyle: "italic",
+          color: C.lavender,
+          fontSize: "16px",
+          margin: "0 0 40px",
+        }}
+      >
+        Inteligência estratégica para criadores de conteúdo
+      </p>
 
-      <section className="rounded-2xl border border-slate-800/80 bg-slate-950/60 p-6 md:p-8">
-        <form className="space-y-5" onSubmit={handleSubmit}>
-          <div>
-            <label className="mb-2 block text-sm text-slate-300">
-              URL do vídeo ou transcrição
-            </label>
-            <textarea
-              required
-              rows={6}
-              value={form.input}
-              onChange={(event) =>
-                setForm((prev) => ({ ...prev, input: event.target.value }))
-              }
-              className="w-full rounded-xl border border-slate-700 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
-              placeholder="Cole a URL (YouTube) ou a transcrição completa aqui..."
-            />
-          </div>
+      {/* Platform selector */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "28px" }}>
+        {platforms.map((p) => {
+          const active = platform === p.id;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setPlatform(p.id)}
+              style={{
+                padding: "10px 22px",
+                borderRadius: "8px",
+                border: active ? `1px solid ${C.gold}` : `1px solid ${C.card}`,
+                background: active ? C.blue : C.card,
+                color: active ? C.text : C.muted,
+                fontFamily: "var(--font-inter)",
+                fontSize: "14px",
+                fontWeight: active ? 600 : 400,
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+            >
+              {p.label}
+            </button>
+          );
+        })}
+      </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-sm text-slate-300">Nicho</label>
-              <input
-                required
-                type="text"
-                value={form.niche}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, niche: event.target.value }))
-                }
-                className="w-full rounded-xl border border-slate-700 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
-                placeholder="Ex: Marketing digital, saúde, finanças..."
-              />
-            </div>
+      {/* Form */}
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+      >
+        {/* Textarea */}
+        <div>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "8px",
+              fontFamily: "var(--font-inter)",
+              fontSize: "13px",
+              color: C.muted,
+            }}
+          >
+            URL do vídeo ou transcrição
+          </label>
+          <textarea
+            required
+            rows={7}
+            value={form.input}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, input: e.target.value }))
+            }
+            onFocus={() => setFocusedField("input")}
+            onBlur={() => setFocusedField(null)}
+            placeholder="Cole a URL (YouTube) ou a transcrição completa aqui..."
+            style={{
+              ...inputStyle(focusedField === "input"),
+              resize: "vertical",
+              lineHeight: "1.6",
+              padding: "14px 16px",
+            }}
+          />
+        </div>
 
-            <div>
-              <label className="mb-2 block text-sm text-slate-300">
-                Estilo
+        {/* Nicho + Estilo */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "16px",
+          }}
+        >
+          {(
+            [
+              {
+                key: "niche" as const,
+                label: "Nicho",
+                placeholder: "Ex: Marketing digital, saúde...",
+              },
+              {
+                key: "style" as const,
+                label: "Estilo",
+                placeholder: "Ex: Direto, provocativo, educativo...",
+              },
+            ] as const
+          ).map(({ key, label, placeholder }) => (
+            <div key={key}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "8px",
+                  fontFamily: "var(--font-inter)",
+                  fontSize: "13px",
+                  color: C.muted,
+                }}
+              >
+                {label}
               </label>
               <input
                 required
                 type="text"
-                value={form.style}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, style: event.target.value }))
+                value={form[key]}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, [key]: e.target.value }))
                 }
-                className="w-full rounded-xl border border-slate-700 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
-                placeholder="Ex: Direto, provocativo, educativo..."
+                onFocus={() => setFocusedField(key)}
+                onBlur={() => setFocusedField(null)}
+                placeholder={placeholder}
+                style={inputStyle(focusedField === key)}
               />
             </div>
-          </div>
+          ))}
+        </div>
 
+        {/* Submit */}
+        <div>
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-cyan-500 px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-70 md:w-auto"
+            onMouseEnter={() => setBtnHover(true)}
+            onMouseLeave={() => setBtnHover(false)}
+            style={{
+              padding: "13px 32px",
+              background: btnHover && !loading ? C.gold : C.blue,
+              color: btnHover && !loading ? "#0A0A0A" : C.text,
+              border: "none",
+              borderRadius: "10px",
+              fontFamily: "var(--font-inter)",
+              fontSize: "14px",
+              fontWeight: 600,
+              cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.7 : 1,
+              transition: "all 0.2s ease",
+              letterSpacing: "0.03em",
+            }}
           >
             {loading ? "Analisando..." : "Gerar Análise"}
           </button>
+        </div>
 
-          {error ? <p className="text-sm text-red-400">{error}</p> : null}
-        </form>
-      </section>
+        {error && (
+          <p
+            style={{
+              fontFamily: "var(--font-inter)",
+              fontSize: "13px",
+              color: "#F87171",
+              margin: 0,
+            }}
+          >
+            {error}
+          </p>
+        )}
+      </form>
 
-      {result ? (
-        <section className="mt-8 grid gap-5 md:grid-cols-2">
-          <article className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6">
-            <h2 className="mb-4 text-lg font-semibold text-cyan-300">
-              Análise
-            </h2>
-            <dl className="space-y-3 text-sm text-slate-300">
-              <div>
-                <dt className="text-slate-400">Tipo de gancho</dt>
-                <dd>{result.analysis.hook_type}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-400">Estrutura</dt>
-                <dd>{result.analysis.structure}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-400">Por que funcionou</dt>
-                <dd>{result.analysis.why_it_worked}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-400">Ponto mais forte</dt>
-                <dd>{result.analysis.strongest_point}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-400">Ponto mais fraco</dt>
-                <dd>{result.analysis.weakest_point}</dd>
-              </div>
-            </dl>
-          </article>
-
-          <article className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6">
-            <h2 className="mb-4 text-lg font-semibold text-cyan-300">
-              Roteiro e Dicas
-            </h2>
-            <dl className="space-y-3 text-sm text-slate-300">
-              <div>
-                <dt className="text-slate-400">Gancho</dt>
-                <dd>{result.script.hook}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-400">Desenvolvimento</dt>
-                <dd>{result.script.development}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-400">Fechamento</dt>
-                <dd>{result.script.closing}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-400">Luz</dt>
-                <dd>{result.script.filming_tips.light}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-400">Enquadramento</dt>
-                <dd>{result.script.filming_tips.framing}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-400">Presença</dt>
-                <dd>{result.script.filming_tips.presence}</dd>
-              </div>
-            </dl>
-          </article>
-        </section>
-      ) : null}
-    </main>
+      {/* Results */}
+      {result && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "20px",
+            marginTop: "44px",
+          }}
+        >
+          <ResultCard
+            title="Análise"
+            fields={[
+              { label: "Tipo de gancho", value: result.analysis.hook_type },
+              { label: "Estrutura", value: result.analysis.structure },
+              { label: "Por que funcionou", value: result.analysis.why_it_worked },
+              { label: "Ponto mais forte", value: result.analysis.strongest_point },
+              { label: "Ponto mais fraco", value: result.analysis.weakest_point },
+            ]}
+          />
+          <ResultCard
+            title="Roteiro e Dicas"
+            fields={[
+              { label: "Gancho", value: result.script.hook },
+              { label: "Desenvolvimento", value: result.script.development },
+              { label: "Fechamento", value: result.script.closing },
+              { label: "Luz", value: result.script.filming_tips.light },
+              { label: "Enquadramento", value: result.script.filming_tips.framing },
+              { label: "Presença", value: result.script.filming_tips.presence },
+            ]}
+          />
+        </div>
+      )}
+    </div>
   );
 }
