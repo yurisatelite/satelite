@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { getSupabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
 
 const C = {
@@ -15,8 +16,15 @@ const C = {
   dim: '#555565',
 } as const
 
+const navItems = [
+  { label: 'Analisar', href: '/' },
+  { label: 'Histórico', href: '/historico' },
+  { label: 'Configurações', href: '/configuracoes', disabled: true },
+]
+
 export function Sidebar() {
   const router = useRouter()
+  const pathname = usePathname()
   const [supabase] = useState(() => getSupabase())
   const [user, setUser] = useState<User | null>(null)
   const [loggingOut, setLoggingOut] = useState(false)
@@ -78,53 +86,32 @@ export function Sidebar() {
             gap: '4px',
           }}
         >
-          <li>
-            <span
-              style={{
-                display: 'block',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                background: 'rgba(0, 74, 173, 0.25)',
-                color: C.gold,
-                fontFamily: 'var(--font-inter)',
-                fontSize: '14px',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}
-            >
-              Analisar
-            </span>
-          </li>
-          <li>
-            <span
-              style={{
-                display: 'block',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                color: C.muted,
-                fontFamily: 'var(--font-inter)',
-                fontSize: '14px',
-                cursor: 'pointer',
-              }}
-            >
-              Histórico
-            </span>
-          </li>
-          <li>
-            <span
-              style={{
-                display: 'block',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                color: C.muted,
-                fontFamily: 'var(--font-inter)',
-                fontSize: '14px',
-                cursor: 'pointer',
-              }}
-            >
-              Configurações
-            </span>
-          </li>
+          {navItems.map(({ label, href, disabled }) => {
+            const isActive = pathname === href
+            return (
+              <li key={href}>
+                <Link
+                  href={disabled ? '#' : href}
+                  onClick={disabled ? (e) => e.preventDefault() : undefined}
+                  style={{
+                    display: 'block',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    background: isActive ? 'rgba(0, 74, 173, 0.25)' : 'transparent',
+                    color: isActive ? C.gold : disabled ? C.dim : C.muted,
+                    fontFamily: 'var(--font-inter)',
+                    fontSize: '14px',
+                    fontWeight: isActive ? 500 : 400,
+                    cursor: disabled ? 'default' : 'pointer',
+                    textDecoration: 'none',
+                    transition: 'background 0.15s ease',
+                  }}
+                >
+                  {label}
+                </Link>
+              </li>
+            )
+          })}
         </ul>
       </nav>
 
