@@ -53,6 +53,7 @@ export default function LoginPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    if (!supabase) return
     setLoading(true)
     setError('')
     setMessage('')
@@ -81,6 +82,7 @@ export default function LoginPage() {
   }
 
   async function handleGoogle() {
+    if (!supabase) return
     setGoogleLoading(true)
     setError('')
     const { error: authError } = await supabase.auth.signInWithOAuth({

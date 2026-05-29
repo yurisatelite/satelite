@@ -22,10 +22,12 @@ export function Sidebar() {
   const [loggingOut, setLoggingOut] = useState(false)
 
   useEffect(() => {
+    if (!supabase) return
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
   }, [supabase])
 
   async function handleLogout() {
+    if (!supabase) return
     setLoggingOut(true)
     await supabase.auth.signOut()
     router.push('/login')
