@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { getSupabase } from "@/lib/supabase";
 
 type Platform = "instagram" | "tiktok" | "youtube";
 
@@ -129,6 +130,25 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [btnHover, setBtnHover] = useState(false);
+
+  // Prefill com o nicho/estilo permanentes definidos em Configurações
+  useEffect(() => {
+    const supabase = getSupabase();
+    if (!supabase) return;
+    supabase
+      .from("profiles")
+      .select("niche, style")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setForm((prev) => ({
+            ...prev,
+            niche: prev.niche || data.niche || "",
+            style: prev.style || data.style || "",
+          }));
+        }
+      });
+  }, []);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();

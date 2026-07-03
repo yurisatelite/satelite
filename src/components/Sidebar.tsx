@@ -5,6 +5,7 @@ import { getSupabase } from '@/lib/supabase'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
+import { PLANS, type PlanId } from '@/lib/plans'
 
 const C = {
   bgSecondary: '#111116',
@@ -16,10 +17,13 @@ const C = {
   dim: '#555565',
 } as const
 
-const navItems = [
+const navItems: { label: string; href: string; disabled?: boolean }[] = [
   { label: 'Analisar', href: '/' },
-  { label: 'Histórico', href: '/historico' },
-  { label: 'Configurações', href: '/configuracoes', disabled: true },
+  { label: 'Banco de Vídeos', href: '/historico' },
+  { label: 'Pesquisa de Nicho', href: '/pesquisa' },
+  { label: 'Ganchos', href: '/ganchos' },
+  { label: 'Roteirizador', href: '/roteirizador' },
+  { label: 'Configurações', href: '/configuracoes' },
 ]
 
 export function Sidebar() {
@@ -28,11 +32,38 @@ export function Sidebar() {
   const [supabase] = useState(() => getSupabase())
   const [user, setUser] = useState<User | null>(null)
   const [loggingOut, setLoggingOut] = useState(false)
+  const [plan, setPlan] = useState<PlanId>('free')
+  const [used, setUsed] = useState<number | null>(null)
 
   useEffect(() => {
     if (!supabase) return
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
   }, [supabase])
+
+  // Recarrega plano e créditos a cada navegação (uso muda após cada análise)
+  useEffect(() => {
+    if (!supabase) return
+    async function loadUsage() {
+      if (!supabase) return
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan')
+        .maybeSingle()
+      if (profile?.plan) setPlan(profile.plan as PlanId)
+
+      const startOfMonth = new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        1
+      ).toISOString()
+      const { count } = await supabase
+        .from('usage_events')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', startOfMonth)
+      setUsed(count ?? 0)
+    }
+    loadUsage()
+  }, [supabase, pathname])
 
   async function handleLogout() {
     if (!supabase) return
@@ -114,6 +145,62 @@ export function Sidebar() {
           })}
         </ul>
       </nav>
+
+      {/* Créditos */}
+      {user && used !== null && (
+        <div style={{ padding: '0 20px 14px' }}>
+          <div
+            style={{
+              background: 'rgba(0, 74, 173, 0.12)',
+              border: `1px solid ${C.card}`,
+              borderRadius: '8px',
+              padding: '10px 12px',
+            }}
+          >
+            <p
+              style={{
+                fontFamily: 'var(--font-inter)',
+                fontSize: '10px',
+                fontWeight: 700,
+                color: C.gold,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                margin: '0 0 3px',
+              }}
+            >
+              Plano {PLANS[plan].name}
+            </p>
+            <p
+              style={{
+                fontFamily: 'var(--font-inter)',
+                fontSize: '12px',
+                color: C.muted,
+                margin: 0,
+              }}
+            >
+              {PLANS[plan].monthlyCredits === null
+                ? 'Análises ilimitadas'
+                : `${Math.max(0, (PLANS[plan].monthlyCredits ?? 0) - used)} de ${PLANS[plan].monthlyCredits} análises restantes`}
+            </p>
+            {plan === 'free' && (
+              <Link
+                href="/precos"
+                style={{
+                  display: 'inline-block',
+                  marginTop: '6px',
+                  fontFamily: 'var(--font-inter)',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: C.gold,
+                  textDecoration: 'none',
+                }}
+              >
+                Fazer upgrade →
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* User + footer */}
       <div style={{ borderTop: `1px solid ${C.card}` }}>

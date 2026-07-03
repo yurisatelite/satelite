@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { YoutubeTranscript } from "youtube-transcript";
 import { getAnthropic } from "@/lib/anthropic";
-import { saveAnalysis, countMonthlyAnalyses } from "@/lib/db";
+import { saveAnalysis } from "@/lib/db";
+import { extractAuth } from "@/lib/auth";
+import { checkQuota, getProfile, recordUsage, quotaExceededMessage } from "@/lib/usage";
 
 const SYSTEM_PROMPT =
   "Você é um estrategista sênior de conteúdo digital brasileiro. Analise o vídeo fornecido e retorne APENAS um JSON válido, sem texto adicional, sem markdown, sem explicações. IMPORTANTE: todos os valores do JSON devem ser escritos em português brasileiro. O JSON deve ter exatamente esta estrutura: { analysis: { hook_type: tipo do gancho em português, structure: estrutura narrativa em português, why_it_worked: por que funcionou em português, strongest_point: ponto mais forte em português, weakest_point: ponto mais fraco em português }, script: { hook: gancho adaptado ao nicho e estilo do usuário em português, development: desenvolvimento em português, closing: fechamento em português, filming_tips: { light: dica de luz em português, framing: enquadramento em português, presence: presença em português } } }";
@@ -12,24 +14,6 @@ type AnalyzeBody = {
   style?: string;
   platform?: string;
 };
-
-type AuthInfo = { accessToken: string; userId: string };
-
-function extractAuth(request: NextRequest): AuthInfo | null {
-  const raw = request.cookies.get("sb-auth-token")?.value;
-  if (!raw) return null;
-  try {
-    const session = JSON.parse(decodeURIComponent(raw));
-    const accessToken = session?.access_token;
-    if (!accessToken) return null;
-    const payload = JSON.parse(
-      Buffer.from(accessToken.split(".")[1], "base64").toString("utf8")
-    );
-    return { accessToken, userId: payload.sub };
-  } catch {
-    return null;
-  }
-}
 
 function extractTextFromResponse(
   content: Array<{ type: string; text?: string }>
@@ -73,9 +57,24 @@ export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as AnalyzeBody;
     const input = body.input?.trim();
-    const niche = body.niche?.trim();
-    const style = body.style?.trim();
+    let niche = body.niche?.trim();
+    let style = body.style?.trim();
     const platform = body.platform?.trim() || "Não especificada";
+
+    const auth = extractAuth(request);
+    if (!auth) {
+      return NextResponse.json(
+        { error: "Faça login para analisar vídeos." },
+        { status: 401 }
+      );
+    }
+
+    // Nicho/estilo permanentes das configurações entram como fallback
+    if (!niche || !style) {
+      const profile = await getProfile(auth.userId, auth.accessToken);
+      niche = niche || profile.niche?.trim() || "";
+      style = style || profile.style?.trim() || "";
+    }
 
     if (!input || !niche || !style) {
       return NextResponse.json(
@@ -84,16 +83,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const auth = extractAuth(request);
-
-    if (auth) {
-      const count = await countMonthlyAnalyses(auth.userId, auth.accessToken);
-      if (count >= 3) {
-        return NextResponse.json(
-          { error: "Você atingiu o limite de 3 análises gratuitas este mês." },
-          { status: 429 }
-        );
-      }
+    const quota = await checkQuota(auth.userId, auth.accessToken);
+    if (!quota.allowed) {
+      return NextResponse.json(
+        { error: quotaExceededMessage(quota), quota },
+        { status: 429 }
+      );
     }
 
     const sourceText = await resolveInputText(input);
@@ -118,15 +113,15 @@ export async function POST(request: NextRequest) {
     );
     const parsed = safeJsonParse(rawText);
 
-    if (auth) {
-      try {
-        await saveAnalysis(
-          { user_id: auth.userId, platform, input, niche, style, result: parsed },
-          auth.accessToken
-        );
-      } catch (saveError) {
-        console.error("Erro ao salvar análise:", saveError);
-      }
+    await recordUsage(auth.userId, auth.accessToken, "analyze");
+
+    try {
+      await saveAnalysis(
+        { user_id: auth.userId, platform, input, niche, style, result: parsed },
+        auth.accessToken
+      );
+    } catch (saveError) {
+      console.error("Erro ao salvar análise:", saveError);
     }
 
     return NextResponse.json(parsed);
