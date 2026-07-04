@@ -156,26 +156,30 @@ export default function PesquisaPage() {
           placeholder="Ex: finanças, fitness, negócios, iluminação..."
           style={{
             flex: 1,
-            background: C.bgSecondary,
-            border: `1px solid ${focused ? C.blue : C.card}`,
-            borderRadius: '10px',
+            background: 'rgba(8,13,27,0.55)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: `1px solid ${focused ? 'rgba(46,111,216,0.7)' : 'rgba(148,163,199,0.16)'}`,
+            boxShadow: focused
+              ? '0 0 0 3px rgba(0,74,173,0.22), inset 0 1px 0 rgba(255,255,255,0.05)'
+              : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+            borderRadius: '12px',
             padding: '12px 16px',
             color: C.text,
             fontFamily: 'var(--font-inter)',
             fontSize: '14px',
             outline: 'none',
-            transition: 'border-color 0.2s ease',
+            transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
           }}
         />
         <button
           type="submit"
           disabled={loading}
+          className="btn-primary"
           style={{
             padding: '12px 28px',
-            background: C.blue,
             color: C.text,
-            border: 'none',
-            borderRadius: '10px',
+            borderRadius: '12px',
             fontFamily: 'var(--font-inter)',
             fontSize: '14px',
             fontWeight: 600,
@@ -213,10 +217,8 @@ export default function PesquisaPage() {
               return (
                 <div
                   key={`${creator.name}-${creator.platform}`}
+                  className="glass-card glass-card--hover fade-up"
                   style={{
-                    background: C.bgSecondary,
-                    border: `1px solid ${C.card}`,
-                    borderRadius: '12px',
                     padding: '18px 22px',
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -297,10 +299,8 @@ export default function PesquisaPage() {
           {watchlist.map((item) => (
             <div
               key={item.id}
+              className="glass-card"
               style={{
-                background: C.bgSecondary,
-                border: `1px solid ${C.card}`,
-                borderRadius: '10px',
                 padding: '14px 20px',
                 display: 'flex',
                 justifyContent: 'space-between',

@@ -18,6 +18,7 @@ const C = {
 } as const
 
 const navItems: { label: string; href: string; disabled?: boolean }[] = [
+  { label: 'Projetos', href: '/projetos' },
   { label: 'Analisar', href: '/' },
   { label: 'Banco de Vídeos', href: '/historico' },
   { label: 'Pesquisa de Nicho', href: '/pesquisa' },
@@ -77,14 +78,13 @@ export function Sidebar() {
 
   return (
     <aside
+      className="glass-panel"
       style={{
         width: '220px',
         position: 'fixed',
         top: 0,
         left: 0,
         height: '100vh',
-        background: C.bgSecondary,
-        borderRight: `1px solid ${C.card}`,
         display: 'flex',
         flexDirection: 'column',
         zIndex: 50,
@@ -93,6 +93,7 @@ export function Sidebar() {
       {/* Logo */}
       <div style={{ padding: '28px 20px 24px' }}>
         <span
+          className="glow-gold"
           style={{
             fontFamily: 'var(--font-cinzel)',
             fontSize: '18px',
@@ -127,15 +128,23 @@ export function Sidebar() {
                   style={{
                     display: 'block',
                     padding: '10px 14px',
-                    borderRadius: '8px',
-                    background: isActive ? 'rgba(0, 74, 173, 0.25)' : 'transparent',
+                    borderRadius: '10px',
+                    background: isActive
+                      ? 'linear-gradient(135deg, rgba(0,74,173,0.38), rgba(0,74,173,0.16))'
+                      : 'transparent',
+                    border: isActive
+                      ? '1px solid rgba(46,111,216,0.35)'
+                      : '1px solid transparent',
+                    boxShadow: isActive
+                      ? 'inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 14px rgba(0,74,173,0.25)'
+                      : 'none',
                     color: isActive ? C.gold : disabled ? C.dim : C.muted,
                     fontFamily: 'var(--font-inter)',
                     fontSize: '14px',
                     fontWeight: isActive ? 500 : 400,
                     cursor: disabled ? 'default' : 'pointer',
                     textDecoration: 'none',
-                    transition: 'background 0.15s ease',
+                    transition: 'background 0.15s ease, border-color 0.15s ease',
                   }}
                 >
                   {label}
@@ -149,14 +158,7 @@ export function Sidebar() {
       {/* Créditos */}
       {user && used !== null && (
         <div style={{ padding: '0 20px 14px' }}>
-          <div
-            style={{
-              background: 'rgba(0, 74, 173, 0.12)',
-              border: `1px solid ${C.card}`,
-              borderRadius: '8px',
-              padding: '10px 12px',
-            }}
-          >
+          <div className="glass-chip" style={{ padding: '10px 12px' }}>
             <p
               style={{
                 fontFamily: 'var(--font-inter)',

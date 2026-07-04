@@ -156,9 +156,14 @@ export default function GanchosPage() {
             placeholder="Cole a transcrição de um vídeo analisado ou descreva o tema do seu próximo vídeo..."
             style={{
               width: '100%',
-              background: C.bgSecondary,
-              border: `1px solid ${focused ? C.blue : C.card}`,
-              borderRadius: '10px',
+              background: 'rgba(8,13,27,0.55)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: `1px solid ${focused ? 'rgba(46,111,216,0.7)' : 'rgba(148,163,199,0.16)'}`,
+              boxShadow: focused
+                ? '0 0 0 3px rgba(0,74,173,0.22), inset 0 1px 0 rgba(255,255,255,0.05)'
+                : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+              borderRadius: '12px',
               padding: '14px 16px',
               color: C.text,
               fontFamily: 'var(--font-inter)',
@@ -166,7 +171,7 @@ export default function GanchosPage() {
               outline: 'none',
               resize: 'vertical',
               lineHeight: '1.6',
-              transition: 'border-color 0.2s ease',
+              transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
             }}
           />
         </div>
@@ -174,12 +179,11 @@ export default function GanchosPage() {
           <button
             type="submit"
             disabled={loading}
+            className="btn-primary"
             style={{
               padding: '13px 32px',
-              background: C.blue,
               color: C.text,
-              border: 'none',
-              borderRadius: '10px',
+              borderRadius: '12px',
               fontFamily: 'var(--font-inter)',
               fontSize: '14px',
               fontWeight: 600,
@@ -192,12 +196,11 @@ export default function GanchosPage() {
           <button
             type="button"
             onClick={() => setShowSaved((v) => !v)}
+            className="glass-chip"
             style={{
               padding: '13px 20px',
-              background: 'transparent',
               color: showSaved ? C.gold : C.muted,
-              border: `1px solid ${showSaved ? C.gold : C.card}`,
-              borderRadius: '10px',
+              borderColor: showSaved ? 'rgba(245,193,108,0.5)' : undefined,
               fontFamily: 'var(--font-inter)',
               fontSize: '13px',
               cursor: 'pointer',
@@ -236,10 +239,8 @@ export default function GanchosPage() {
               {saved.map((h) => (
                 <div
                   key={h.id}
+                  className="glass-card"
                   style={{
-                    background: C.bgSecondary,
-                    border: `1px solid ${C.card}`,
-                    borderRadius: '10px',
                     padding: '14px 20px',
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -292,15 +293,14 @@ export default function GanchosPage() {
             return (
               <div
                 key={i}
+                className="glass-card glass-card--hover fade-up"
                 style={{
-                  background: C.bgSecondary,
-                  border: `1px solid ${C.card}`,
-                  borderRadius: '12px',
                   padding: '18px 22px',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'flex-start',
                   gap: '16px',
+                  animationDelay: `${i * 60}ms`,
                 }}
               >
                 <div style={{ minWidth: 0 }}>

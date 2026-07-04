@@ -73,7 +73,42 @@ export default function PrecosPage() {
   const paidPlans = [PLANS.criador, PLANS.pro]
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bgPrimary }}>
+    <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      {/* Atmosfera orbital */}
+      <div
+        className="orb"
+        style={{
+          width: '640px',
+          height: '640px',
+          top: '-220px',
+          left: '50%',
+          marginLeft: '-320px',
+          background: 'radial-gradient(circle, rgba(0,74,173,0.45), transparent 70%)',
+        }}
+      />
+      <div
+        className="orb"
+        style={{
+          width: '480px',
+          height: '480px',
+          bottom: '10%',
+          right: '-160px',
+          background: 'radial-gradient(circle, rgba(245,193,108,0.10), transparent 70%)',
+          animationDelay: '-7s',
+        }}
+      />
+      <div
+        className="orb"
+        style={{
+          width: '420px',
+          height: '420px',
+          top: '38%',
+          left: '-160px',
+          background: 'radial-gradient(circle, rgba(0,74,173,0.28), transparent 70%)',
+          animationDelay: '-14s',
+        }}
+      />
+
       {/* Header */}
       <header
         style={{
@@ -81,10 +116,13 @@ export default function PrecosPage() {
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '24px 48px',
-          borderBottom: `1px solid ${C.bgSecondary}`,
+          borderBottom: '1px solid rgba(148,163,199,0.1)',
+          position: 'relative',
+          zIndex: 2,
         }}
       >
         <span
+          className="glow-gold"
           style={{
             fontFamily: 'var(--font-cinzel)',
             fontSize: '18px',
@@ -109,7 +147,17 @@ export default function PrecosPage() {
       </header>
 
       {/* Hero */}
-      <section style={{ textAlign: 'center', padding: '90px 24px 70px', maxWidth: '760px', margin: '0 auto' }}>
+      <section
+        className="fade-up"
+        style={{
+          textAlign: 'center',
+          padding: '90px 24px 70px',
+          maxWidth: '760px',
+          margin: '0 auto',
+          position: 'relative',
+          zIndex: 2,
+        }}
+      >
         <h1
           style={{
             fontFamily: 'var(--font-cinzel)',
@@ -138,12 +186,12 @@ export default function PrecosPage() {
         </p>
         <Link
           href="/login"
+          className="btn-primary"
           style={{
             display: 'inline-block',
             padding: '15px 40px',
-            background: C.blue,
             color: C.text,
-            borderRadius: '10px',
+            borderRadius: '12px',
             fontFamily: 'var(--font-inter)',
             fontSize: '15px',
             fontWeight: 600,
@@ -164,17 +212,15 @@ export default function PrecosPage() {
           maxWidth: '980px',
           margin: '0 auto',
           padding: '0 24px 80px',
+          position: 'relative',
+          zIndex: 2,
         }}
       >
-        {valueProps.map((prop) => (
+        {valueProps.map((prop, i) => (
           <div
             key={prop.title}
-            style={{
-              background: C.bgSecondary,
-              border: `1px solid ${C.card}`,
-              borderRadius: '14px',
-              padding: '28px',
-            }}
+            className="glass-card glass-card--hover fade-up"
+            style={{ padding: '28px', animationDelay: `${i * 100}ms` }}
           >
             <h3
               style={{
@@ -204,7 +250,15 @@ export default function PrecosPage() {
       </section>
 
       {/* Pricing */}
-      <section style={{ maxWidth: '820px', margin: '0 auto', padding: '0 24px 100px' }}>
+      <section
+        style={{
+          maxWidth: '820px',
+          margin: '0 auto',
+          padding: '0 24px 100px',
+          position: 'relative',
+          zIndex: 2,
+        }}
+      >
         <h2
           style={{
             fontFamily: 'var(--font-cinzel)',
@@ -256,12 +310,17 @@ export default function PrecosPage() {
             return (
               <div
                 key={plan.id}
+                className="glass-card glass-card--hover"
                 style={{
-                  background: C.bgSecondary,
-                  border: `1px solid ${highlighted ? C.gold : C.card}`,
-                  borderRadius: '16px',
                   padding: '36px 32px',
                   position: 'relative',
+                  ...(highlighted
+                    ? {
+                        borderColor: 'rgba(245,193,108,0.45)',
+                        boxShadow:
+                          '0 14px 48px rgba(245,193,108,0.12), 0 10px 36px rgba(3,6,16,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
+                      }
+                    : {}),
                 }}
               >
                 {highlighted && (
@@ -342,13 +401,12 @@ export default function PrecosPage() {
                 <button
                   onClick={() => handleSubscribe(plan.id)}
                   disabled={loadingPlan !== null}
+                  className={highlighted ? 'btn-gold' : 'btn-primary'}
                   style={{
                     width: '100%',
                     padding: '14px',
-                    background: highlighted ? C.gold : C.blue,
                     color: highlighted ? '#0A0A0A' : C.text,
-                    border: 'none',
-                    borderRadius: '10px',
+                    borderRadius: '12px',
                     fontFamily: 'var(--font-inter)',
                     fontSize: '14px',
                     fontWeight: 700,

@@ -38,15 +38,20 @@ const platforms: { id: Platform; label: string }[] = [
 function inputStyle(focused: boolean) {
   return {
     width: '100%',
-    background: C.bgSecondary,
-    border: `1px solid ${focused ? C.blue : C.card}`,
-    borderRadius: '10px',
+    background: 'rgba(8,13,27,0.55)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    border: `1px solid ${focused ? 'rgba(46,111,216,0.7)' : 'rgba(148,163,199,0.16)'}`,
+    boxShadow: focused
+      ? '0 0 0 3px rgba(0,74,173,0.22), inset 0 1px 0 rgba(255,255,255,0.05)'
+      : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+    borderRadius: '12px',
     padding: '12px 16px',
     color: C.text,
     fontFamily: 'var(--font-inter)',
     fontSize: '14px',
     outline: 'none',
-    transition: 'border-color 0.2s ease',
+    transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
   } as const
 }
 
@@ -184,11 +189,16 @@ export default function RoteirizadorPage() {
               key={p.id}
               type="button"
               onClick={() => setPlatform(p.id)}
+              className={active ? 'btn-primary' : undefined}
               style={{
                 padding: '10px 22px',
-                borderRadius: '8px',
-                border: active ? `1px solid ${C.gold}` : `1px solid ${C.card}`,
-                background: active ? C.blue : C.card,
+                borderRadius: '10px',
+                border: active
+                  ? '1px solid rgba(245,193,108,0.55)'
+                  : '1px solid rgba(148,163,199,0.16)',
+                background: active ? undefined : 'rgba(14,20,38,0.5)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
                 color: active ? C.text : C.muted,
                 fontFamily: 'var(--font-inter)',
                 fontSize: '14px',
@@ -270,12 +280,11 @@ export default function RoteirizadorPage() {
           <button
             type="submit"
             disabled={loading}
+            className="btn-primary"
             style={{
               padding: '13px 32px',
-              background: C.blue,
               color: C.text,
-              border: 'none',
-              borderRadius: '10px',
+              borderRadius: '12px',
               fontFamily: 'var(--font-inter)',
               fontSize: '14px',
               fontWeight: 600,
@@ -296,15 +305,7 @@ export default function RoteirizadorPage() {
       </form>
 
       {result && (
-        <div
-          style={{
-            marginTop: '44px',
-            background: C.bgSecondary,
-            border: `1px solid ${C.card}`,
-            borderRadius: '12px',
-            padding: '28px',
-          }}
-        >
+        <div className="glass-card fade-up" style={{ marginTop: '44px', padding: '28px' }}>
           <div
             style={{
               display: 'flex',

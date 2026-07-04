@@ -1,33 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getAnthropic } from "@/lib/anthropic";
+import { generateText, safeJsonParse } from "@/lib/anthropic";
 import { extractAuth } from "@/lib/auth";
 import { checkQuota, getProfile, recordUsage, quotaExceededMessage } from "@/lib/usage";
 
 const SYSTEM_PROMPT =
   "Você é um especialista em ganchos de vídeos curtos para redes sociais brasileiras. A partir do conteúdo fornecido, gere EXATAMENTE 10 variações de gancho (primeira frase falada do vídeo, que prende a atenção nos 3 primeiros segundos). Retorne APENAS um JSON válido, sem markdown, com esta estrutura: { hooks: [ { text: o gancho em português brasileiro, type: um destes tipos exatos: contradição | dado chocante | pergunta | confissão, rationale: por que esse gancho funciona (1 frase curta) } ] }. Distribua os 10 ganchos entre os 4 tipos (2 a 3 de cada). Adapte tudo ao nicho e estilo do usuário. Todos os textos em português brasileiro.";
-
-function extractTextFromResponse(
-  content: Array<{ type: string; text?: string }>
-): string {
-  return content
-    .filter((block) => block.type === "text" && typeof block.text === "string")
-    .map((block) => block.text)
-    .join("\n")
-    .trim();
-}
-
-function safeJsonParse(raw: string): unknown {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    const start = raw.indexOf("{");
-    const end = raw.lastIndexOf("}");
-    if (start !== -1 && end !== -1 && end > start) {
-      return JSON.parse(raw.slice(start, end + 1));
-    }
-    throw new Error("A resposta da IA não retornou JSON válido.");
-  }
-}
 
 type HooksBody = {
   content?: string;
@@ -71,24 +48,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const completion = await getAnthropic().messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1800,
+    const rawText = await generateText({
       system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content:
-            `Nicho: ${niche}\n` +
-            `Estilo: ${style}\n` +
-            `Conteúdo/tema do vídeo:\n${content}`,
-        },
-      ],
+      maxTokens: 1800,
+      prompt:
+        `Nicho: ${niche}\n` +
+        `Estilo: ${style}\n` +
+        `Conteúdo/tema do vídeo:\n${content}`,
     });
 
-    const rawText = extractTextFromResponse(
-      completion.content as Array<{ type: string; text?: string }>
-    );
     const parsed = safeJsonParse(rawText);
 
     await recordUsage(auth.userId, auth.accessToken, "hooks");

@@ -37,17 +37,23 @@ export default function LoginPage() {
   const [message, setMessage] = useState('')
 
   function inputStyle(field: string) {
+    const focused = focusedField === field
     return {
       width: '100%',
-      background: C.bgPrimary,
-      border: `1px solid ${focusedField === field ? C.blue : C.card}`,
-      borderRadius: '10px',
+      background: 'rgba(6,10,22,0.6)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      border: `1px solid ${focused ? 'rgba(46,111,216,0.7)' : 'rgba(148,163,199,0.16)'}`,
+      boxShadow: focused
+        ? '0 0 0 3px rgba(0,74,173,0.22), inset 0 1px 0 rgba(255,255,255,0.05)'
+        : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+      borderRadius: '12px',
       padding: '13px 16px',
       color: C.text,
       fontFamily: 'var(--font-inter)',
       fontSize: '14px',
       outline: 'none',
-      transition: 'border-color 0.2s ease',
+      transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
     }
   }
 
@@ -111,26 +117,48 @@ export default function LoginPage() {
     <div
       style={{
         minHeight: '100vh',
-        background: C.bgPrimary,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        position: 'relative',
       }}
     >
       <div
+        className="orb"
+        style={{
+          width: '560px',
+          height: '560px',
+          top: '-180px',
+          right: '-100px',
+          background: 'radial-gradient(circle, rgba(0,74,173,0.4), transparent 70%)',
+        }}
+      />
+      <div
+        className="orb"
+        style={{
+          width: '420px',
+          height: '420px',
+          bottom: '-160px',
+          left: '-80px',
+          background: 'radial-gradient(circle, rgba(245,193,108,0.12), transparent 70%)',
+          animationDelay: '-9s',
+        }}
+      />
+      <div
+        className="glass-card fade-up"
         style={{
           width: '100%',
           maxWidth: '400px',
-          background: C.bgSecondary,
-          border: `1px solid ${C.card}`,
-          borderRadius: '16px',
           padding: '40px 36px',
+          position: 'relative',
+          zIndex: 2,
         }}
       >
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <h1
+            className="glow-gold"
             style={{
               fontFamily: 'var(--font-cinzel)',
               fontSize: '22px',
@@ -250,19 +278,17 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
+            className="btn-primary"
             style={{
               marginTop: '4px',
               padding: '13px',
-              background: C.blue,
               color: C.text,
-              border: 'none',
-              borderRadius: '10px',
+              borderRadius: '12px',
               fontFamily: 'var(--font-inter)',
               fontSize: '14px',
               fontWeight: 600,
               cursor: loading ? 'not-allowed' : 'pointer',
               opacity: loading ? 0.7 : 1,
-              transition: 'background 0.2s ease',
             }}
           >
             {loading

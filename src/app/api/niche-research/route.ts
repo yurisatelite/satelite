@@ -1,32 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getAnthropic } from "@/lib/anthropic";
+import { generateText, safeJsonParse } from "@/lib/anthropic";
 import { extractAuth } from "@/lib/auth";
 
 const SYSTEM_PROMPT =
   "Você é um pesquisador de mercado de criadores de conteúdo brasileiros. Dado um nicho, sugira criadores de conteúdo relevantes e conhecidos daquele nicho no Brasil (e alguns internacionais de referência quando fizer sentido). Retorne APENAS um JSON válido, sem markdown, com esta estrutura: { creators: [ { name: nome do criador, handle: @ mais provável ou nome do canal, platform: instagram | tiktok | youtube, reason: por que vale estudar esse criador (1 frase em português), content_style: estilo de conteúdo dele em poucas palavras } ] }. Sugira entre 6 e 10 criadores. IMPORTANTE: sugira apenas criadores que você realmente conhece; se não tiver certeza do handle exato, use o nome mais conhecido do canal. Todos os textos em português brasileiro.";
-
-function extractTextFromResponse(
-  content: Array<{ type: string; text?: string }>
-): string {
-  return content
-    .filter((block) => block.type === "text" && typeof block.text === "string")
-    .map((block) => block.text)
-    .join("\n")
-    .trim();
-}
-
-function safeJsonParse(raw: string): unknown {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    const start = raw.indexOf("{");
-    const end = raw.lastIndexOf("}");
-    if (start !== -1 && end !== -1 && end > start) {
-      return JSON.parse(raw.slice(start, end + 1));
-    }
-    throw new Error("A resposta da IA não retornou JSON válido.");
-  }
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,16 +24,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const completion = await getAnthropic().messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1500,
+    const rawText = await generateText({
       system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: `Nicho: ${niche}` }],
+      maxTokens: 1500,
+      prompt: `Nicho: ${niche}`,
     });
 
-    const rawText = extractTextFromResponse(
-      completion.content as Array<{ type: string; text?: string }>
-    );
     const parsed = safeJsonParse(rawText);
 
     return NextResponse.json(parsed);

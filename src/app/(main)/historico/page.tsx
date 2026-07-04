@@ -23,12 +23,15 @@ type Analysis = {
   style: string
   input: string
   result: {
+    summary?: string
     analysis?: {
       hook_type?: string
       structure?: string
       why_it_worked?: string
       strongest_point?: string
       weakest_point?: string
+      storytelling_format?: string
+      visual_layout?: string
     }
     script?: {
       hook?: string
@@ -38,6 +41,15 @@ type Analysis = {
   }
   created_at: string
 }
+
+const detailTabs = [
+  { id: 'resumo', label: 'Resumo' },
+  { id: 'analise', label: 'Análise' },
+  { id: 'roteiro', label: 'Roteiro' },
+  { id: 'visual', label: 'Formato & Visual' },
+] as const
+
+type DetailTab = (typeof detailTabs)[number]['id']
 
 const platformLabels: Record<string, string> = {
   instagram: 'Instagram',
@@ -54,9 +66,11 @@ const periodOptions = [
 
 function selectStyle() {
   return {
-    background: C.card,
-    border: `1px solid ${C.cardBorder}`,
-    borderRadius: '8px',
+    background: 'rgba(14,20,38,0.55)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(148,163,199,0.16)',
+    borderRadius: '10px',
     padding: '9px 12px',
     color: C.text,
     fontFamily: 'var(--font-inter)',
@@ -104,6 +118,7 @@ export default function BancoDeVideosPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<DetailTab>('resumo')
 
   const [platformFilter, setPlatformFilter] = useState('all')
   const [periodFilter, setPeriodFilter] = useState('all')
@@ -265,14 +280,17 @@ export default function BancoDeVideosPage() {
           return (
             <div
               key={a.id}
-              onClick={() => setExpandedId(expanded ? null : a.id)}
+              onClick={() => {
+                setExpandedId(expanded ? null : a.id)
+                setActiveTab('resumo')
+              }}
+              className={expanded ? 'glass-card' : 'glass-card glass-card--hover'}
               style={{
-                background: C.card,
-                border: `1px solid ${expanded ? C.blue : C.cardBorder}`,
-                borderRadius: '12px',
                 padding: '20px 24px',
                 cursor: 'pointer',
-                transition: 'border-color 0.15s ease',
+                ...(expanded
+                  ? { borderColor: 'rgba(46,111,216,0.5)', boxShadow: '0 14px 44px rgba(0,74,173,0.3)' }
+                  : {}),
               }}
             >
               <div
@@ -337,21 +355,83 @@ export default function BancoDeVideosPage() {
 
               {expanded && (
                 <div
+                  onClick={(e) => e.stopPropagation()}
                   style={{
                     marginTop: '20px',
                     paddingTop: '20px',
-                    borderTop: `1px solid ${C.cardBorder}`,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '14px',
+                    borderTop: '1px solid rgba(148,163,199,0.14)',
+                    cursor: 'default',
                   }}
                 >
-                  <Detail label="Estrutura" value={a.result?.analysis?.structure} />
-                  <Detail label="Por que funcionou" value={a.result?.analysis?.why_it_worked} />
-                  <Detail label="Ponto mais forte" value={a.result?.analysis?.strongest_point} />
-                  <Detail label="Ponto mais fraco" value={a.result?.analysis?.weakest_point} />
-                  <Detail label="Desenvolvimento" value={a.result?.script?.development} />
-                  <Detail label="Fechamento" value={a.result?.script?.closing} />
+                  {/* Abas */}
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '18px', flexWrap: 'wrap' }}>
+                    {detailTabs.map((t) => {
+                      const isActive = activeTab === t.id
+                      return (
+                        <button
+                          key={t.id}
+                          onClick={() => setActiveTab(t.id)}
+                          className={isActive ? 'btn-primary' : undefined}
+                          style={{
+                            padding: '7px 16px',
+                            borderRadius: '20px',
+                            border: isActive
+                              ? '1px solid rgba(245,193,108,0.5)'
+                              : '1px solid rgba(148,163,199,0.18)',
+                            background: isActive ? undefined : 'rgba(14,20,38,0.5)',
+                            color: isActive ? C.text : C.muted,
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '12px',
+                            fontWeight: isActive ? 600 : 400,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          {t.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    {activeTab === 'resumo' && (
+                      <>
+                        <Detail label="Resumo do vídeo" value={a.result?.summary} />
+                        <Detail label="Tipo de gancho" value={a.result?.analysis?.hook_type} />
+                        <Detail label="Estrutura" value={a.result?.analysis?.structure} />
+                        {!a.result?.summary && !a.result?.analysis?.hook_type && (
+                          <p style={{ fontFamily: 'var(--font-inter)', fontSize: '13px', color: C.muted, margin: 0 }}>
+                            Sem resumo disponível para esta análise.
+                          </p>
+                        )}
+                      </>
+                    )}
+                    {activeTab === 'analise' && (
+                      <>
+                        <Detail label="Por que funcionou" value={a.result?.analysis?.why_it_worked} />
+                        <Detail label="Ponto mais forte" value={a.result?.analysis?.strongest_point} />
+                        <Detail label="Ponto mais fraco" value={a.result?.analysis?.weakest_point} />
+                      </>
+                    )}
+                    {activeTab === 'roteiro' && (
+                      <>
+                        <Detail label="Gancho" value={a.result?.script?.hook} />
+                        <Detail label="Desenvolvimento" value={a.result?.script?.development} />
+                        <Detail label="Fechamento" value={a.result?.script?.closing} />
+                      </>
+                    )}
+                    {activeTab === 'visual' && (
+                      <>
+                        <Detail label="Formato de storytelling" value={a.result?.analysis?.storytelling_format} />
+                        <Detail label="Layout visual" value={a.result?.analysis?.visual_layout} />
+                        {!a.result?.analysis?.storytelling_format && !a.result?.analysis?.visual_layout && (
+                          <p style={{ fontFamily: 'var(--font-inter)', fontSize: '13px', color: C.muted, margin: 0 }}>
+                            Disponível apenas para análises novas — analise o vídeo de novo para gerar formato e layout visual.
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

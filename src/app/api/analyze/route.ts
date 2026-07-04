@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { YoutubeTranscript } from "youtube-transcript";
-import { getAnthropic } from "@/lib/anthropic";
+import { generateText, safeJsonParse } from "@/lib/anthropic";
+import { resolveInputText } from "@/lib/transcript";
 import { saveAnalysis } from "@/lib/db";
 import { extractAuth } from "@/lib/auth";
 import { checkQuota, getProfile, recordUsage, quotaExceededMessage } from "@/lib/usage";
 
 const SYSTEM_PROMPT =
-  "Você é um estrategista sênior de conteúdo digital brasileiro. Analise o vídeo fornecido e retorne APENAS um JSON válido, sem texto adicional, sem markdown, sem explicações. IMPORTANTE: todos os valores do JSON devem ser escritos em português brasileiro. O JSON deve ter exatamente esta estrutura: { analysis: { hook_type: tipo do gancho em português, structure: estrutura narrativa em português, why_it_worked: por que funcionou em português, strongest_point: ponto mais forte em português, weakest_point: ponto mais fraco em português }, script: { hook: gancho adaptado ao nicho e estilo do usuário em português, development: desenvolvimento em português, closing: fechamento em português, filming_tips: { light: dica de luz em português, framing: enquadramento em português, presence: presença em português } } }";
+  "Você é um estrategista sênior de conteúdo digital brasileiro. Analise o vídeo fornecido e retorne APENAS um JSON válido, sem texto adicional, sem markdown, sem explicações. IMPORTANTE: todos os valores do JSON devem ser escritos em português brasileiro. O JSON deve ter exatamente esta estrutura: { summary: resumo do vídeo em 2-3 frases, analysis: { hook_type: tipo do gancho, structure: estrutura narrativa, why_it_worked: por que funcionou, strongest_point: ponto mais forte, weakest_point: ponto mais fraco, storytelling_format: formato de storytelling usado (ex: jornada pessoal, lista, contraste antes/depois, confissão) e como ele sustenta a retenção, visual_layout: sugestão de layout visual para regravar (enquadramento, cortes, texto na tela, b-roll) }, script: { hook: gancho adaptado ao nicho e estilo do usuário, development: desenvolvimento, closing: fechamento, filming_tips: { light: dica de luz, framing: enquadramento, presence: presença } } }";
 
 type AnalyzeBody = {
   input?: string;
@@ -14,44 +14,6 @@ type AnalyzeBody = {
   style?: string;
   platform?: string;
 };
-
-function extractTextFromResponse(
-  content: Array<{ type: string; text?: string }>
-): string {
-  return content
-    .filter((block) => block.type === "text" && typeof block.text === "string")
-    .map((block) => block.text)
-    .join("\n")
-    .trim();
-}
-
-function safeJsonParse(raw: string): unknown {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    const start = raw.indexOf("{");
-    const end = raw.lastIndexOf("}");
-    if (start !== -1 && end !== -1 && end > start) {
-      return JSON.parse(raw.slice(start, end + 1));
-    }
-    throw new Error("A resposta da IA não retornou JSON válido.");
-  }
-}
-
-async function resolveInputText(input: string): Promise<string> {
-  if (!input.startsWith("http")) {
-    return input;
-  }
-
-  const transcript = await YoutubeTranscript.fetchTranscript(input);
-  const combinedText = transcript.map((line) => line.text).join(" ").trim();
-
-  if (!combinedText) {
-    throw new Error("Não foi possível extrair transcrição da URL.");
-  }
-
-  return combinedText;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -93,24 +55,15 @@ export async function POST(request: NextRequest) {
 
     const sourceText = await resolveInputText(input);
 
-    const completion = await getAnthropic().messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1200,
+    const rawText = await generateText({
       system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content:
-            `Nicho: ${niche}\n` +
-            `Estilo: ${style}\n` +
-            `Conteúdo do vídeo/transcrição:\n${sourceText}`,
-        },
-      ],
+      maxTokens: 2000,
+      prompt:
+        `Nicho: ${niche}\n` +
+        `Estilo: ${style}\n` +
+        `Conteúdo do vídeo/transcrição:\n${sourceText}`,
     });
 
-    const rawText = extractTextFromResponse(
-      completion.content as Array<{ type: string; text?: string }>
-    );
     const parsed = safeJsonParse(rawText);
 
     await recordUsage(auth.userId, auth.accessToken, "analyze");

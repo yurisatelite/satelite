@@ -102,17 +102,23 @@ export default function ConfiguracoesPage() {
   const remaining = limit === null ? null : Math.max(0, limit - used)
 
   function inputStyle(field: string) {
+    const focused = focusedField === field
     return {
       width: '100%',
-      background: C.bgSecondary,
-      border: `1px solid ${focusedField === field ? C.blue : C.card}`,
-      borderRadius: '10px',
+      background: 'rgba(8,13,27,0.55)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      border: `1px solid ${focused ? 'rgba(46,111,216,0.7)' : 'rgba(148,163,199,0.16)'}`,
+      boxShadow: focused
+        ? '0 0 0 3px rgba(0,74,173,0.22), inset 0 1px 0 rgba(255,255,255,0.05)'
+        : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+      borderRadius: '12px',
       padding: '12px 16px',
       color: C.text,
       fontFamily: 'var(--font-inter)',
       fontSize: '14px',
       outline: 'none',
-      transition: 'border-color 0.2s ease',
+      transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
     } as const
   }
 
@@ -159,15 +165,7 @@ export default function ConfiguracoesPage() {
       )}
 
       {/* Plano atual */}
-      <div
-        style={{
-          background: C.bgSecondary,
-          border: `1px solid ${C.card}`,
-          borderRadius: '12px',
-          padding: '24px 28px',
-          marginBottom: '36px',
-        }}
-      >
+      <div className="glass-card" style={{ padding: '24px 28px', marginBottom: '36px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <p
@@ -293,12 +291,11 @@ export default function ConfiguracoesPage() {
           <button
             type="submit"
             disabled={saving || loading}
+            className="btn-primary"
             style={{
               padding: '13px 32px',
-              background: C.blue,
               color: C.text,
-              border: 'none',
-              borderRadius: '10px',
+              borderRadius: '12px',
               fontFamily: 'var(--font-inter)',
               fontSize: '14px',
               fontWeight: 600,

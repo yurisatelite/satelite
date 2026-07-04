@@ -83,17 +83,23 @@ export default function ResetPage() {
   }
 
   function inputStyle(field: string) {
+    const focused = focusedField === field
     return {
       width: '100%',
-      background: C.bgPrimary,
-      border: `1px solid ${focusedField === field ? C.blue : C.card}`,
-      borderRadius: '10px',
+      background: 'rgba(6,10,22,0.6)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      border: `1px solid ${focused ? 'rgba(46,111,216,0.7)' : 'rgba(148,163,199,0.16)'}`,
+      boxShadow: focused
+        ? '0 0 0 3px rgba(0,74,173,0.22), inset 0 1px 0 rgba(255,255,255,0.05)'
+        : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+      borderRadius: '12px',
       padding: '13px 16px',
       color: C.text,
       fontFamily: 'var(--font-inter)',
       fontSize: '14px',
       outline: 'none',
-      transition: 'border-color 0.2s ease',
+      transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
     } as const
   }
 
@@ -101,21 +107,31 @@ export default function ResetPage() {
     <div
       style={{
         minHeight: '100vh',
-        background: C.bgPrimary,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        position: 'relative',
       }}
     >
       <div
+        className="orb"
+        style={{
+          width: '520px',
+          height: '520px',
+          top: '-160px',
+          right: '-100px',
+          background: 'radial-gradient(circle, rgba(0,74,173,0.4), transparent 70%)',
+        }}
+      />
+      <div
+        className="glass-card fade-up"
         style={{
           width: '100%',
           maxWidth: '400px',
-          background: C.bgSecondary,
-          border: `1px solid ${C.card}`,
-          borderRadius: '16px',
           padding: '40px 36px',
+          position: 'relative',
+          zIndex: 2,
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
@@ -255,13 +271,12 @@ export default function ResetPage() {
             <button
               type="submit"
               disabled={saving}
+              className="btn-primary"
               style={{
                 marginTop: '4px',
                 padding: '13px',
-                background: C.blue,
                 color: C.text,
-                border: 'none',
-                borderRadius: '10px',
+                borderRadius: '12px',
                 fontFamily: 'var(--font-inter)',
                 fontSize: '14px',
                 fontWeight: 600,
