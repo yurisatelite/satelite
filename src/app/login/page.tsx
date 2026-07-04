@@ -27,7 +27,7 @@ export default function LoginPage() {
   const router = useRouter()
   const [supabase] = useState(() => getSupabase())
 
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [focusedField, setFocusedField] = useState<string | null>(null)
@@ -64,6 +64,12 @@ export default function LoginPage() {
         if (authError) throw authError
         router.push('/')
         router.refresh()
+      } else if (mode === 'forgot') {
+        const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth/reset`,
+        })
+        if (authError) throw authError
+        setMessage('Link de recuperação enviado. Confira sua caixa de entrada e o spam.')
       } else {
         const { error: authError } = await supabase.auth.signUp({
           email,
@@ -145,7 +151,11 @@ export default function LoginPage() {
               margin: 0,
             }}
           >
-            {mode === 'login' ? 'Bem-vindo de volta' : 'Crie sua conta'}
+            {mode === 'login'
+              ? 'Bem-vindo de volta'
+              : mode === 'signup'
+                ? 'Crie sua conta'
+                : 'Recuperar acesso'}
           </p>
         </div>
 
@@ -178,29 +188,53 @@ export default function LoginPage() {
             />
           </div>
 
-          <div>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '6px',
-                fontFamily: 'var(--font-inter)',
-                fontSize: '12px',
-                color: C.muted,
-              }}
-            >
-              Senha
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onFocus={() => setFocusedField('password')}
-              onBlur={() => setFocusedField(null)}
-              placeholder="••••••••"
-              style={inputStyle('password')}
-            />
-          </div>
+          {mode !== 'forgot' && (
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  marginBottom: '6px',
+                  fontFamily: 'var(--font-inter)',
+                  fontSize: '12px',
+                  color: C.muted,
+                }}
+              >
+                Senha
+              </label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setFocusedField('password')}
+                onBlur={() => setFocusedField(null)}
+                placeholder="••••••••"
+                style={inputStyle('password')}
+              />
+              {mode === 'login' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('forgot')
+                    setError('')
+                    setMessage('')
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: C.muted,
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-inter)',
+                    fontSize: '12px',
+                    padding: 0,
+                    marginTop: '8px',
+                  }}
+                >
+                  Esqueci minha senha
+                </button>
+              )}
+            </div>
+          )}
 
           {error && (
             <p style={{ fontFamily: 'var(--font-inter)', fontSize: '13px', color: '#F87171', margin: 0 }}>
@@ -231,7 +265,13 @@ export default function LoginPage() {
               transition: 'background 0.2s ease',
             }}
           >
-            {loading ? 'Aguarde...' : mode === 'login' ? 'Entrar' : 'Criar conta'}
+            {loading
+              ? 'Aguarde...'
+              : mode === 'login'
+                ? 'Entrar'
+                : mode === 'signup'
+                  ? 'Criar conta'
+                  : 'Enviar link de recuperação'}
           </button>
         </form>
 
@@ -245,7 +285,7 @@ export default function LoginPage() {
             margin: '18px 0 0',
           }}
         >
-          {mode === 'login' ? 'Não tem conta? ' : 'Já tem conta? '}
+          {mode === 'login' ? 'Não tem conta? ' : mode === 'signup' ? 'Já tem conta? ' : 'Lembrou a senha? '}
           <button
             onClick={switchMode}
             style={{
